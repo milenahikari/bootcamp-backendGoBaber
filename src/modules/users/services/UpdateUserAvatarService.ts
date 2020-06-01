@@ -1,20 +1,25 @@
-import { getRepository } from 'typeorm';
 import path from 'path';
 import fs from 'fs';
 import User from '@modules/users/infra/typeorm/entities/User';
+import IUsersRepository from '@modules/users/repositories/IUsersRepository';
 import AppError from '@shared/errors/AppError';
 import uploadConfig from '@config/upload';
+import { injectable, inject } from 'tsyringe';
 
-interface Request {
+interface IRequest {
   userId: string;
   avatarFilename: string;
 }
 
+@injectable()
 class UpdateUserAvatarService {
-  public async execute({ userId, avatarFilename }: Request): Promise<User> {
-    const userRepository = getRepository(User);
+  constructor(
+    @inject('UsersRepository')
+    private userRepository: IUsersRepository,
+  ) { }
 
-    const user = await userRepository.findOne(userId);
+  public async execute({ userId, avatarFilename }: IRequest): Promise<User> {
+    const user = await this.userRepository.findById(userId);
 
     if (!user) {
       throw new AppError('Usuário não é válido para trocar o avatar', 401);
@@ -31,7 +36,7 @@ class UpdateUserAvatarService {
 
     user.avatar = avatarFilename;
 
-    await userRepository.save(user);
+    await this.userRepository.save(user);
 
     return user;
   }
