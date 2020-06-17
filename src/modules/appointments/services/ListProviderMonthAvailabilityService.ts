@@ -1,4 +1,5 @@
 import { injectable, inject } from 'tsyringe';
+import { getDaysInMonth, getDate } from 'date-fns';
 
 import IAppointmentsRepository from '@modules/appointments/repositories/IAppointmentsRepository';
 
@@ -33,8 +34,27 @@ class ListProviderMonthAvailabilityService {
       },
     );
 
-    console.log(appointments);
-    return [{ day: 1, available: false }];
+    const numberOfDaysInAnMonth = getDaysInMonth(new Date(year, month - 1));
+
+    const eachDayArray = Array.from(
+      { length: numberOfDaysInAnMonth },
+      (_, index) => index + 1,
+    );
+
+    // Percorre todos os dias do mês
+    const availability = eachDayArray.map(day => {
+      // Percorre cada appoinment do mês e verifica se tem um appointment agendado nesse dia
+      const appointmentInDay = appointments.filter(appointment => {
+        return getDate(appointment.date) === day;
+      });
+
+      return {
+        day,
+        available: appointmentInDay.length < 10, // 1 agendamento por hora, das 8h as 17h só pode existir em um dia 10 agendamentos no máximo
+      };
+    });
+
+    return availability;
   }
 }
 export default ListProviderMonthAvailabilityService;
