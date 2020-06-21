@@ -41,7 +41,6 @@ class ListProviderAppointmentsService {
         year,
       });
 
-      console.log('Fui no banco');
       await this.cacheProvider.save(cacheKey, appointments);
     }
 
